@@ -1,0 +1,22 @@
+
+Histograma 1
+Mapear cada inteiro i no número de pessoas com i amigas.
+
+Histograma 2
+Mapear cada inteiro i no número de pessoas que têm i pessoas como amigas
+
+i = 1 -> 0
+i = 2 -> 1
+i = 3 -> 0
+
+
+i = 0 -> 0
+i = 1 -> 0
+i = 2 -> 1
+
+
+
+1->2
+|
+V
+3
