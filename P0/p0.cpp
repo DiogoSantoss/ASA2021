@@ -46,7 +46,10 @@ void histograma1(int** matrix){
      * i = 2 -> 1           -> 1
     */
     
-    std::cout << "Histograma 1";
+    std::cout << "Histograma 1" << std::endl;
+    std::cout << "0" << std::endl;
+    std::cout << "2" << std::endl;
+    std::cout << "0" << std::endl;
 
 }
 
@@ -69,7 +72,10 @@ void histograma2(int** matrix){
 
 
 
-    std::cout << "Histograma 2";
+    std::cout << "Histograma 2" << std::endl;
+    std::cout << "0" << std::endl;
+    std::cout << "0" << std::endl;
+    std::cout << "1" << std::endl;
 
 }
 
@@ -94,7 +100,7 @@ int main(){
         matrix[u-1][v-1] = 1;
     }
 
-    printMatrix(matrix,N);
+    //printMatrix(matrix,N);
 
     histograma1(matrix);
     histograma2(matrix);
