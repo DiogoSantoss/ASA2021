@@ -1,109 +1,116 @@
-#include <iostream>
+/**
+ * Temos um grafo com pessoas
+ * 
+ * 3,4  (numero de nos, numero de arcos)
+ * 1 2
+ * 2 1
+ * 2 3
+ * 1 3
+ * 
+ * P1 <---> P2
+ *  |    
+ *  | --->  P3
+ * 
+ * 
+ * 
+ * histograma 1 -> histograma dos arcos de saida (setas a apontar para fora)
+ * 0: 1    quantas pessoas sao amigas de zero pessoas
+ * 1: 0
+ * 2: 2
+ * histograma 2 -> histograma dos arcos de entrada (setas a apontar para dentro)
+ * 0: 0   quantas pessoas é que tem zero amigos (quantas pessoas é que são meus amigos)
+ * 1: 2
+ * 2: 1
+ * 
+ * 
+ * Representacao interna:
+ * Vector com n (numero de nos) espacos em que cada espaco guardamos o numero para o qual ele aponta
+ * -------------------
+ * |  1  |  2  |  3  |
+ * -------------------
+ *     v    v     v
+ *    1,2  1,3    
+ * 
+ * Na verdade guardamos u-1 ou seja se for 1 2 --> 0 1  
+*/
+
+//g++ -o main <nome> -std=c++11
+
 #include <cstdio>
+#include <vector>
+#include <iostream>
+using namespace std;
 
+vector<vector<int>> graph;
+vector<vector<int>> graph_trans;
 
-int** createMatrix(int N){
-    /**
-     * Cria matriz
-    */
+void readGraph(){
+    int n,m;
+    scanf("%d,%d", &n, &m);
+    // Alocar o espaco para o grafo
+    graph = vector<vector<int>>(n,vector<int>());
+    graph_trans = vector<vector<int>>(n, vector<int>());
+    for(int i=0; i<m; i++){
+        int u,v;
+        scanf("%d %d", &u, &v);
+        graph[u-1].push_back(v-1);
+        graph_trans[v-1].push_back(u-2);
+    }
 
-    int** matrix = new int*[N];
-    
-    for(int i = 0; i<N; i++)
-        matrix[i] = new int[N];
-    
-    return matrix;
 }
 
-
-void printMatrix(int** matrix,int N){
-    /**
-     * Mostra matriz
-    */
-
-    for(int i = 0; i<N; i++){
-        for(int j = 0; j<N; j++){
-            std::cout << matrix[i][j];
+void printGraph(vector<vector<int>> graph){
+    for(int i=0; i<graph.size(); i++){
+        for(int j=0; j<graph[i].size(); j++){
+            printf("%d %d\n", i+1, graph[i][j]+1);
         }
-        std::cout << std::endl;
     }
 }
 
-
-void histograma1(int** matrix){
-    /**
-     * O primeiro histograma deve mapear cada 
-     * inteiro i no número de pessoas com i amigas.
-     * 
-     * 3,3                3,2
-     * 1 2                1 2
-     * 1 3                1 3
-     * 2 3
-     * 
-     * Histograma 1     Histograma 1
-     * i = 0 -> 1           -> 2
-     * i = 1 -> 1           -> 0
-     * i = 2 -> 1           -> 1
-    */
-    
-    std::cout << "Histograma 1" << std::endl;
-    std::cout << "0" << std::endl;
-    std::cout << "2" << std::endl;
-    std::cout << "0" << std::endl;
-
+int computeMaxOut(vector<vector<int>> graph){
+    int max = 0;
+    for(int i=0; i<graph.size(); i++){
+        if(graph[i].size() > max){
+            max = graph[i].size();
+        }
+    }
+    return max;
 }
 
-
-void histograma2(int** matrix){
-    /**
-     * O segundo histograma deve mapear cada 
-     * inteiro i no número de pessoas que têm i pessoas como amigas.
-     * 
-     * 3,3                3,2
-     * 1 2                1 2
-     * 1 3                1 3
-     * 2 3
-     * 
-     * Histograma 2     Histograma 2
-     * i = 0 -> 1           -> 2
-     * i = 1 -> 1           -> 0
-     * i = 2 -> 1           -> 1
-    */
-
-
-
-    std::cout << "Histograma 2" << std::endl;
-    std::cout << "0" << std::endl;
-    std::cout << "0" << std::endl;
-    std::cout << "1" << std::endl;
-
+// O(V) em que V eh o numero de nos assumindo que .size() eh constante
+vector<int> computeOutHistogram(vector<vector<int>> graph){
+    int max = computeMaxOut(graph);
+    vector<int> hist = vector<int>(max+1, 0);
+    for(int i=0; i<graph.size(); i++){
+        hist[graph[i].size()]++;
+    }
+    return hist;
 }
 
+void printHistogram(vector<int> hist){
+    for(int i=0; i<hist.size(); i++){
+        printf("%d: %d\n",i,hist[i]);
+    }
+}
+
+//Outra forma de resolver o problema seria calcular o grafo transposto em vez de cria-lo na altura da leitura
+vector<vector<int>> compute(vector<vector<int>> graph){
+    vector<vector<int>> trans_graph = vector<vector<int>>(graph.size(),vector<int>());
+    for(int i=0; i<graph.size(); i++){
+        for(int j=0; j<graph[i].size(); j++){
+            trans_graph[graph[i][j]].push_back(i);
+        }
+    }
+    return trans_graph;
+}
 
 int main(){
-    /**
-     * Uma linha:
-     * N -> Numero de pessoas na rede de contactos
-     * M -> Numero de relacoes de amizade entre pessoas
-     * Multiplas Linhas:
-     * Cada linha indica que u tem como amiga a pessoa v
-    */
-
-    int N,M;
-    scanf("%d,%d", &N, &M);
-
-    int** matrix = createMatrix(N);
-
-    int u,v;
-    for(int i = 0; i<M; i++){
-        scanf("%d %d",&u,&v);
-        matrix[u-1][v-1] = 1;
-    }
-
-    //printMatrix(matrix,N);
-
-    histograma1(matrix);
-    histograma2(matrix);
-
+    readGraph();
+    vector<int> hist1 = computeOutHistogram(graph);
+    printf("Histograma 1\n");
+    printHistogram(hist1);
+    vector<int> hist2 = computeOutHistogram(graph_trans);
+    printf("Histograma 2\n");
+    printHistogram(hist2);
     return 0;
 }
