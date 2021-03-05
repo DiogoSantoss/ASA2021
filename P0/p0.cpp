@@ -48,13 +48,13 @@ void readGraph(){
     int n,m;
     scanf("%d,%d", &n, &m);
     // Alocar o espaco para o grafo
-    graph = vector<vector<int>>(n,vector<int>());
+    graph = vector<vector<int>>(n, vector<int>());
     graph_trans = vector<vector<int>>(n, vector<int>());
     for(int i=0; i<m; i++){
         int u,v;
         scanf("%d %d", &u, &v);
         graph[u-1].push_back(v-1);
-        graph_trans[v-1].push_back(u-2);
+        graph_trans[v-1].push_back(u-1);
     }
 
 }
