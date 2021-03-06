@@ -28,8 +28,8 @@
  * -------------------
  * |  1  |  2  |  3  |
  * -------------------
- *     v    v     v
- *    1,2  1,3    
+ *    v     v     v
+ *   1,2   1,3    
  * 
  * Na verdade guardamos u-1 ou seja se for 1 2 --> 0 1  
 */
@@ -56,7 +56,6 @@ void readGraph(){
         graph[u-1].push_back(v-1);
         graph_trans[v-1].push_back(u-1);
     }
-
 }
 
 void printGraph(vector<vector<int>> graph){
