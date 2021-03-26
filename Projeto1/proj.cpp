@@ -133,14 +133,16 @@ int executeBFS(int source){
 int main(){
 
     readInput();
-    printGraph();
-    printTransGraph();
-
+    //printGraph();
+    //printTransGraph();
+    int visited, max = 0;
     vector<int> sources = findSources();
-    printSources(sources);
+    //printSources(sources);
 
     for (unsigned int i = 0; i < sources.size(); ++i)
-        cout << "Source = " << sources[i] + 1 << endl << "Longest streak = " << executeBFS(sources[i]) << endl;
+        if ((visited = executeBFS(sources[i])) > max)
+            max = visited;
 
+    cout << sources.size() << " " << max << endl;
     exit(EXIT_SUCCESS);
 }
