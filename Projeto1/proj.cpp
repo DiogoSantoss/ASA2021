@@ -16,7 +16,7 @@
 using namespace std;
 
 typedef struct{
-    int colour = WHITE;
+    int streak;
     vector<int> adj;
 } vertex;
 
@@ -105,29 +105,30 @@ int executeBFS(int source){
      * Executes BFS and returns number of vertex visited
     */
     for (unsigned int i = 0; i < graph.size(); ++i)
-        graph[i].colour = WHITE;
+        graph[i].streak = 0;
 
-    graph[source].colour = GREY;
+    graph[source].streak = 1;
 
     queue<int> q = queue<int>();
     q.push(source);
 
-    int u, index, visited = 0;
+    int u, index, streak = 0, maxStreak = 0;
 
     while (!q.empty()){
         u = q.front();
         q.pop();
         for (unsigned int i = 0; i < graph[u].adj.size(); ++i){
+            streak = graph[u].streak;
             index = graph[u].adj[i];
-            if (graph[index].colour == WHITE){
-                graph[index].colour = GREY;
-                visited++;
-                q.push(index);
+            if (streak >= graph[index].streak){
+                graph[index].streak = streak + 1;
+                if (graph[index].streak > maxStreak)
+                    maxStreak = graph[index].streak;
             }
+            q.push(index);
         }
-        graph[u].colour = BLACK;
     }
-    return visited;
+    return maxStreak;
 }
 
 int main(){
@@ -135,14 +136,15 @@ int main(){
     readInput();
     //printGraph();
     //printTransGraph();
-    int visited, max = 0;
+    int streak, max = 0;
     vector<int> sources = findSources();
     //printSources(sources);
 
     for (unsigned int i = 0; i < sources.size(); ++i)
-        if ((visited = executeBFS(sources[i])) > max)
-            max = visited;
+        if ((streak = executeBFS(sources[i])) > max)
+            max = streak;
 
     cout << sources.size() << " " << max << endl;
     exit(EXIT_SUCCESS);
+    
 }
