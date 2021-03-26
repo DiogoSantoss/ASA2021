@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 
 #define WHITE 1
 #define GREY 0
@@ -16,7 +17,8 @@
 using namespace std;
 
 typedef struct{
-    int streak;
+    int colour = WHITE;
+    int end;
     vector<int> adj;
 } vertex;
 
@@ -96,17 +98,19 @@ void printSources(vector<int> sources){
     cout << endl;
 }
 
-//Para cada vertice no grafo, iniciar um conjunto de BFS que esgotem todos os vertices
-        //Para cada BFS feita, se o numero de arvores for menor que o minimo atual, substituir esse valor
-        //e a profundidade da maior arvore encontrada (usar uma variavel que guarde a profundidade maxima)
-        //Ao acabar o conjunto de BFS, repaintGraph() e passar para o proximo vertice inicial
-int executeBFS(int source){
-    /**
-     * Executes BFS and returns number of vertex visited
-    */
-    for (unsigned int i = 0; i < graph.size(); ++i)
-        graph[i].streak = 0;
+/******************************************************************************TESTING AREA******************************************************************************/
 
+/**
+ * Executa BFS para cada Source do grafo.
+ * A BFS coloca a Source na queue, de seguida tira e coloca os adjacentes na queue atualizando os streaks dos adj
+ * Retira um adjacente da queue e coloca os seus adjacentes e atualiza os streaks
+*/
+
+int executeBFS(int source){
+    for (unsigned int i = 0; i < graph.size(); ++i){
+        graph[i].streak = 0;
+    }
+        
     graph[source].streak = 1;
 
     queue<int> q = queue<int>();
@@ -117,6 +121,7 @@ int executeBFS(int source){
     while (!q.empty()){
         u = q.front();
         q.pop();
+        cout << u;
         for (unsigned int i = 0; i < graph[u].adj.size(); ++i){
             streak = graph[u].streak;
             index = graph[u].adj[i];
@@ -131,6 +136,36 @@ int executeBFS(int source){
     return maxStreak;
 }
 
+/*
+int executeDFS(int source){
+
+    for(unsigned int i = 0; i < graph.size(); i++){
+        graph[i].colour = WHITE;
+        graph[i].end = 0;
+    }
+
+    int time = 0;
+
+    stack<int> s = stack<int>();
+    graph[source].colour = GREY;
+    s.push(source);
+
+    while(!q.empty()){
+        u = s.top();
+        s.pop();
+
+        for(unsigned int i = 0; i<graph[u].size(); i++){
+            if(graph[u].adj[i].colour == WHITE){
+                graph[u].adj[i].colour = GREY
+            }
+        }
+        graph[u].colour = BLACK;
+        //graph[u].end = time+1;
+    }
+
+
+}
+*/
 int main(){
 
     readInput();
