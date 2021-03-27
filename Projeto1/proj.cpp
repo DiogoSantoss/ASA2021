@@ -13,6 +13,7 @@ using namespace std;
 
 typedef struct{
     bool visited;
+    int streak = 1;
     vector<int> adj;
 } vertex;
 
@@ -104,18 +105,20 @@ vector<int> topologicalSort(vector<int> sources){
     return sorted;
 }
 
-int findLongestStreak(vector<int> sources, vector<int> sorted){
-    int max = 0, streak = 0;
-
-    for(unsigned int i = 0; i<sources.size(); ++i){
-        for(unsigned int n = findValue(sorted,i); n<sorted.size();++n){
-            if(findValue(graph[sorted[n]].adj, sorted[n+1]) != -1)
-                streak++;
+int findLongestStreak(vector<int> sorted){
+    int maxStreak = 1;
+    for (unsigned int i = 0; i < sorted.size(); ++i){
+        int father = sorted[i];
+        for (unsigned int j = 0; j < graph[father].adj.size(); ++j){
+            int son = graph[father].adj[j];
+            if (graph[father].streak >= graph[son].streak){
+                graph[son].streak = graph[father].streak + 1;
+                if (graph[son].streak > maxStreak)
+                    maxStreak = graph[son].streak;
+            }
         }
-        if (streak > max)
-            max = streak;
     }
-    return max;
+    return maxStreak;
 }
 
 /*************************************************************************************************************************************/
@@ -128,7 +131,7 @@ int main(){
     vector<int> sources = findSources();
     vector<int> topo = topologicalSort(sources);
 
-    printf("%ld %d\n", sources.size(), findLongestStreak(sources,topo));
+    printf("%ld %d\n", sources.size(), findLongestStreak(topo));
 
     exit(EXIT_SUCCESS);  
 }
