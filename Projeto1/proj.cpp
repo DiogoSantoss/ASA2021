@@ -30,7 +30,10 @@ void readInput(){
      * Reads input from stdin and inicializes graph and graph_trans
     */
     int n, m;
-    scanf("%d %d", &n, &m);
+    if (scanf("%d %d", &n, &m) < 0){
+            cout << "Vértice inválido!" << endl;
+            exit(EXIT_FAILURE);
+        }
     if (n < 2 || m < 0){
         cout << "Input invalido. Tente de novo!" << endl;
         exit(EXIT_FAILURE);
@@ -41,7 +44,10 @@ void readInput(){
     
     int u, v;
     for (int i = 0; i < m; ++i){
-        scanf("%d %d", &u, &v);
+        if (scanf("%d %d", &u, &v) < 0){
+            cout << "Vértice inválido!" << endl;
+            exit(EXIT_FAILURE);
+        }
         graph[u-1].adj.push_back(v-1);
         graph_trans[v-1].push_back(u-1);
     }
