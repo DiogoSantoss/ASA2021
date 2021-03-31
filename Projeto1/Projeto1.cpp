@@ -27,13 +27,13 @@ void printVector(vector<int> v);
 
 void readInput(){
     /**
-     * Reads input from stdin and inicializes graph and graph_trans
+     * Reads input from stdin and inicializes the correspondent graph
     */
     int n, m;
     if (scanf("%d %d", &n, &m) < 0){
-            cout << "Vértice inválido!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        cout << "Input invalido. Tente de novo!" << endl;
+        exit(EXIT_FAILURE);
+    }
     if (n < 2 || m < 0){
         cout << "Input invalido. Tente de novo!" << endl;
         exit(EXIT_FAILURE);
@@ -44,7 +44,7 @@ void readInput(){
     int u, v;
     for (int i = 0; i < m; ++i){
         if (scanf("%d %d", &u, &v) < 0){
-            cout << "Vértice inválido!" << endl;
+            cout << "Vertice invalido. Tente de novo!" << endl;
             exit(EXIT_FAILURE);
         }
         graph[u-1].adj.push_back(v-1);
@@ -67,61 +67,37 @@ vector<int> findSources(){
     return res;
 }
 
-int findValue(vector<int> v, int n){
+int findLongestStreak(vector<int> sources){
     /**
-     * Finds values in vector of int
+     * Finds the longest sequence of connected nodes in the graph.
     */
-    for(unsigned int i = 0; i<v.size();++i){
-        if(v[i] == n)
-            return i;
-    }
-    return -1;
-}
-
-vector<int> topologicalSort(vector<int> sources){
-    /**
-     * Sorts graph in Topological Order.
-    */
-
-    vector<int> sorted = vector<int>();
 
     queue<int> q = queue<int>();
     for(unsigned int i = 0; i<sources.size(); i++){
         q.push(sources[i]);
     }
 
-    int u,adj;
+    int maxStreak = 1, u, adj;
 
     while(!q.empty()){
         u = q.front();
         q.pop();
-        sorted.push_back(u);
 
         for(unsigned int i = 0; i<graph[u].adj.size(); ++i){
 
             adj = graph[u].adj[i];
 
-            if(graph[adj].in>0)
+            if (graph[u].streak >= graph[adj].streak){
+                graph[adj].streak = graph[u].streak + 1;
+                if (graph[adj].streak > maxStreak)
+                    maxStreak = graph[adj].streak;
+            }
+
+            if(graph[adj].in > 0)
                 graph[adj].in--;
 
             if(isSource(adj))
                 q.push(adj);
-        }
-    }
-    return sorted;
-}
-
-int findLongestStreak(vector<int> sorted){
-    int maxStreak = 1;
-    for (unsigned int i = 0; i < sorted.size(); ++i){
-        int father = sorted[i];
-        for (unsigned int j = 0; j < graph[father].adj.size(); ++j){
-            int son = graph[father].adj[j];
-            if (graph[father].streak >= graph[son].streak){
-                graph[son].streak = graph[father].streak + 1;
-                if (graph[son].streak > maxStreak)
-                    maxStreak = graph[son].streak;
-            }
         }
     }
     return maxStreak;
@@ -135,9 +111,9 @@ int main(){
     readInput();
 
     vector<int> sources = findSources();
-    vector<int> topo = topologicalSort(sources);
+    int streak = findLongestStreak(sources);
 
-    printf("%ld %d\n", sources.size(), findLongestStreak(topo));
+    printf("%ld %d\n", sources.size(), streak);
 
     exit(EXIT_SUCCESS);  
 }
