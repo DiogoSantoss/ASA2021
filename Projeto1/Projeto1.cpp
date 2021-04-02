@@ -1,5 +1,5 @@
 /**
- * Ficheiro: proj.cpp
+ * Ficheiro: Projeto1.cpp
  * Realizado por: David Belchior (95550) e Diogo Santos (95562)
  * Instituto Superior Tecnico - LEIC-A - Analise e Sintese de Algoritmos
  * Para compilar: g++ -std=c++11 -O3 -Wall proj.cpp -lm
@@ -113,7 +113,7 @@ int main(){
     vector<int> sources = findSources();
     int streak = findLongestStreak(sources);
 
-    printf("%ld %d\n", sources.size(), streak);
+    cout << sources.size() << " " << streak << endl;
 
     exit(EXIT_SUCCESS);  
 }
