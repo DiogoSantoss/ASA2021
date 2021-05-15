@@ -17,7 +17,7 @@ using namespace std;
 #define WHITE -1
 #define GRAY 0
 #define BLACK 1
-#define INF 100
+#define INF 10000
 
 typedef struct{
     int cap;
@@ -225,6 +225,8 @@ int findMaxFlux(int s){
 
 int main(){
     readInput();
+    //printGraph(graph);
+    //printGraph(residual);
     EdmondsKarp();
     cout << findMaxFlux(0) << endl;
     exit(EXIT_SUCCESS);  
