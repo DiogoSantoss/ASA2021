@@ -2,37 +2,37 @@
  * Ficheiro: Projeto1.cpp
  * Realizado por: David Belchior (95550) e Diogo Santos (95562)
  * Instituto Superior Tecnico - LEIC-A - Analise e Sintese de Algoritmos
- * Para compilar: g++ -std=c++11 -O3 -Wall Projeto2.cpp -lm
+ * Para compilar: g++ -std=c++11 -O3 -Wall proj.cpp -lm
 */
 
 #include <iostream>
 #include <vector>
 #include <queue>
 #include <stack>
+#include <map>
 
 using namespace std;
 
 /*BFS CONST*/
 #define WHITE -1
-#define GREY 0
+#define GRAY 0
 #define BLACK 1
 #define INF 10000
 
-// Each edge has a flux and an id (position in original graph)
+// Each edge has a capacity, a flux and an id (position in original graph)
 typedef struct{
+    int cap;
     int flux;
-    int id;
 } edge;
 
 // Each vertex has an array of edges and necessary params for BFS
 typedef struct{
-    vector<edge> edges;
+    map<int,edge> edges;
     int parent;
-    int parentEdge;
     int colour;
 } vertex;
 
-//Residual Graph
+vector<vertex> graph;
 vector<vertex> residual;
 
 void printGraph(vector<vertex> g);
@@ -52,6 +52,8 @@ void readInput(){
         exit(EXIT_FAILURE);
     }
 
+    // Creates graph and residual graph
+    graph = vector<vertex>(n+2);
     residual = vector<vertex>(n+2);
 
     int x, y;
@@ -61,18 +63,23 @@ void readInput(){
             exit(EXIT_FAILURE);
         }
 
-        edge rX1, rX2, rY1, rY2;
+        edge eX1, eX2, eY1, eY2, rX1, rX2, rY1, rY2;
 
-        rX1.flux = x;   rX2.flux = x;
-        rX1.id = 0;     rX2.id = i;
+        eX1.cap = x;  eX2.cap = x;  rX1.cap = x;  rX2.cap = x;
+        eX1.flux = 0; eX2.flux = 0; rX1.flux = x; rX2.flux = x;
         
-        rY1.flux = y;   rY2.flux = y;
-        rY1.id = n+1;   rY2.id = i;
+        eY1.cap = y;  eY2.cap = y;  rY1.cap = y;  rY2.cap = y;
+        eY1.flux = 0; eY2.flux = 0; rY1.flux = y; rY2.flux = y;
 
-        residual[i].edges.push_back(rX1);   //Aresta do processo i para processador X
-        residual[0].edges.push_back(rX2);   //Aresta do processador X para processo i
-        residual[i].edges.push_back(rY1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(rY2); //Aresta do processador Y para processado i
+        graph[i].edges[0] = eX1;      //Aresta do processo i para processador X
+        graph[0].edges[i] = eX2;      //Aresta do processador X para processo i
+        graph[i].edges[n+1] = eY1;    //Aresta do processo i para processador Y
+        graph[n+1].edges[i] = eY2;    //Aresta do processador Y para processo i
+
+        residual[i].edges[0] = rX1;
+        residual[0].edges[i] = rX2;
+        residual[i].edges[n+1] = rY1;
+        residual[n+1].edges[i] = rY2;
     }
     
     int u, v, c;
@@ -86,26 +93,18 @@ void readInput(){
             exit(EXIT_FAILURE);
         }
 
-        edge r1, r2;
+        edge e1, e2, r1, r2;
 
-        r1.flux = c; r2.flux = c;
-        r1.id = v;   r2.id = u;
+        e1.cap = c;  e2.cap = c;  r1.cap = c;  r2.cap = c;
+        e1.flux = 0; e2.flux = 0; r1.flux = c; r2.flux = c;
 
-        residual[u].edges.push_back(r1);  //Aresta do processo u para o processo v
-        residual[v].edges.push_back(r2);  //Aresta do processo v para o processo u
+
+        graph[u].edges[v] = e1; //Aresta do processo u para processo v
+        graph[v].edges[u] = e2; //Aresta do processo v para processo u
+
+        residual[u].edges[v] = r1;
+        residual[v].edges[u] = r2;
     }
-}
-
-int findIndex(vector<edge> v, int x){
-    /**
-     * Finds the index of x in the vector v
-     */
-    for (unsigned int i = 0; i < v.size(); ++i){
-        if (v[i].id == x){
-            return i;
-        }
-    }
-    return -1;
 }
 
 void BFS(int s){
@@ -114,10 +113,9 @@ void BFS(int s){
      */
     for(unsigned int i = 0; i < residual.size(); ++i){
         residual[i].parent = -1;
-        residual[i].parentEdge = -1;
         residual[i].colour = WHITE;
     }
-    residual[s].colour = GREY;
+    residual[s].colour = GRAY;
 
     queue<int> Q;
     Q.push(s);
@@ -125,20 +123,21 @@ void BFS(int s){
     while(!Q.empty()){
         int w = Q.front();    
         Q.pop();
-        for(unsigned int i = 0; i < residual[w].edges.size(); ++i){
-            int id = residual[w].edges[i].id;
-            if(residual[w].edges[i].flux > 0 && residual[id].colour == WHITE){
+
+        map<int,edge>::iterator itr;
+        for(itr=residual[w].edges.begin(); itr !=residual[w].edges.end(); ++itr){
+            int id = itr->first;
+            if(residual[w].edges[id].flux > 0 && residual[id].colour == WHITE){
                 Q.push(id);
-                residual[id].colour = GREY;
+                residual[id].colour = GRAY;
                 residual[id].parent = w;
-                residual[id].parentEdge = i;
             }
         }
         residual[w].colour = BLACK;
     }
 }
 
-pair<stack<int>,int> findAugPath(int s){
+stack<int> findPath(int s){
     /**
      * Finds shortest path from X to Y
      */
@@ -147,42 +146,69 @@ pair<stack<int>,int> findAugPath(int s){
     stack<int> path = stack<int>();
     int child = residual.size()-1;
     int parent = residual[child].parent;
-
-    int min = INF;
-    while (parent >= 0){
-        if (min > fluxes[child][parent]){
-            min = fluxes[child][parent];
-        }
+    while (true){
         path.push(child);
         child = parent;
-        parent = residual[child].parent;
+        if (child != -1)
+            parent = residual[child].parent;
+        else
+            break;
     }
-    path.push(0);
-    return make_pair(path,min);
+    return path;
 }
 
-int EdmondsKarp(){
-
-    pair<stack<int>,int> aug = findAugPath(0);
-    stack<int> path;
-    int min, cur, next, cur_index, next_index,total=0;
-    while((path = aug.first).size() > 1){
-        min = aug.second;
-        total += min;
+int calculateMinAugPath(stack<int> path){
+    /**
+     * Finds minimal augmentating flux in the shortest path
+     */
+    int min = INF;
+    while(path.size() > 1){
+        int cur = path.top();
+        path.pop();
+        int next = path.top();
         
+        if (min > residual[cur].edges[next].flux){
+            min = residual[cur].edges[next].flux;
+        }
+    }
+    return min;
+}
+
+
+void EdmondsKarp(){
+
+    stack<int> path;
+    int min, cur, next;
+    while((path = findPath(0)).size() > 1){
+
+        //printStack(path);
+
+        min = calculateMinAugPath(path);
         while(path.size() > 1){
             cur = path.top();
             path.pop();
             next = path.top();
-            next_index = residual[next].parentEdge;
-            cur_index = findIndex(residual[next].edges, cur);
-            if (cur_index >= 0 && next_index >= 0){
-                residual[cur].edges[next_index].flux -= min;
-                residual[next].edges[cur_index].flux -= min;
-            }
+
+            graph[cur].edges[next].flux += min;
+            residual[cur].edges[next].flux -= min;
+            graph[next].edges[cur].flux += min;
+            residual[next].edges[cur].flux -= min;
         }
-        aug = findAugPath(0);
+        //printGraph(graph);
+        //printGraph(residual);
     }
+}
+
+int findMaxFlux(int s){
+    /**
+     * MaxFlux is equal to the sum of flux coming out of X
+     */
+    int total = 0;
+    map<int,edge>::iterator itr;
+    for(itr=graph[s].edges.begin(); itr !=graph[s].edges.end(); ++itr){
+        total += itr->second.flux;
+    }
+
     return total;
 }
 
@@ -194,7 +220,11 @@ int main(){
     readInput();
     //printGraph(graph);
     //printGraph(residual);
-    cout << EdmondsKarp() << endl;
+    EdmondsKarp();
+    //printGraph(graph);
+    //printGraph(residual);
+    cout << findMaxFlux(0) << endl;
+
     exit(EXIT_SUCCESS);  
 }
 
@@ -208,8 +238,9 @@ void printGraph(vector<vertex> g){
     cout << "Graph:" << endl;
     for(unsigned int i = 0; i < g.size(); ++i){
         cout << i << " _> ";
-        for(unsigned int j = 0; j < g[i].edges.size(); ++j){
-            cout << "(" << g[i].edges[j].id << ", " << g[i].edges[j].flux << ") ";
+        map<int,edge>::iterator itr;
+        for(itr=g[i].edges.begin(); itr !=g[i].edges.end(); ++itr){
+            cout << "(" << itr->first << ", " << itr->second.flux << ", " << itr->second.cap << ") ";
         }
         cout << endl;
     }
