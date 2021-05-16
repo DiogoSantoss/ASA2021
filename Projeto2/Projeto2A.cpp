@@ -9,6 +9,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <algorithm>
 
 using namespace std;
 
@@ -22,7 +23,7 @@ using namespace std;
 typedef struct{
     vector<int> edges;
     int parent;
-    int colour;
+    bool visited;
 } vertex;
 
 //Residual Graph
@@ -60,10 +61,10 @@ void readInput(){
             exit(EXIT_FAILURE);
         }
 
-        residual[i].edges.push_back(0);     //Aresta do processo i para processador X
         residual[0].edges.push_back(i);     //Aresta do processador X para processo i
+        residual[i].edges.push_back(0);
         residual[i].edges.push_back(n+1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(i);   //Aresta do processador Y para processado i
+        residual[n+1].edges.push_back(i);
         fluxes[0][i] = x;
         fluxes[i][0] = x;
         fluxes[i][n+1] = y;
@@ -100,15 +101,16 @@ int findIndex(vector<edge> v, int x){
     return -1;
 }
 */
-void BFS(int s){
+
+bool BFS(int s, int t){
     /**
      * Breadth-First Search
      */
     for(unsigned int i = 0; i < residual.size(); ++i){
         residual[i].parent = -1;
-        residual[i].colour = WHITE;
+        residual[i].visited = false;
     }
-    residual[s].colour = GREY;
+    residual[s].visited = true;
 
     queue<int> Q;
     Q.push(s);
@@ -118,42 +120,43 @@ void BFS(int s){
         Q.pop();
         for(unsigned int i = 0; i < residual[w].edges.size(); ++i){
             int id = residual[w].edges[i];                            //index of edge i of w in residual graph
-            if(fluxes[w][id] > 0 && residual[id].colour == WHITE){
-                Q.push(id);
-                residual[id].colour = GREY;
+            if(fluxes[w][id] > 0 && !(residual[id].visited)){
                 residual[id].parent = w;
+                if (id == t)
+                    return true;
+                Q.push(id);
+                residual[id].visited = true;
             }
         }
-        residual[w].colour = BLACK;
     }
+    return false;
 }
 
-pair<stack<int>,int> findAugPath(int s){
+pair<stack<int>,int> findAugPath(int s, int t){
     /**
      * Finds shortest path from X to Y
      */
-    BFS(s);
 
     stack<int> path = stack<int>();
+    if(!BFS(s, t))
+        return make_pair(path,0);
+
     int child = residual.size()-1;         // Y
     int parent = residual[child].parent; 
-
-    int min = INF;
+    int minimum = INF;
     while (parent >= 0){                   
-        if (min > fluxes[child][parent]){
-            min = fluxes[child][parent];
-        }
+        minimum = min(minimum,fluxes[child][parent]);
         path.push(child);                 
         child = parent;
         parent = residual[child].parent;
     }
     path.push(0);
-    return make_pair(path,min);
+    return make_pair(path,minimum);
 }
 
 int EdmondsKarp(){
 
-    pair<stack<int>,int> aug = findAugPath(0);
+    pair<stack<int>,int> aug = findAugPath(0, n+1);
     stack<int> path;
     int min, cur, next, total=0;
     while((path = aug.first).size() > 1){
@@ -167,7 +170,7 @@ int EdmondsKarp(){
             fluxes[cur][next] -= min;
             fluxes[next][cur] -= min;
         }
-        aug = findAugPath(0);
+        aug = findAugPath(0, n+1);
     }
     return total;
 }
