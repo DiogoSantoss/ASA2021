@@ -17,7 +17,7 @@ using namespace std;
 #define WHITE -1
 #define GREY 0
 #define BLACK 1
-#define INF 10000
+#define INF 1000
 
 // Each vertex has an array of edges and necessary params for BFS
 typedef struct{
@@ -28,59 +28,32 @@ typedef struct{
 
 //Residual Graph
 vector<vertex> residual;
-int** fluxes; 
+vector<vector<int>> fluxes; 
 int n;
-
-void printGraph(vector<vertex> g);
-void printStack(stack<int> s);
 
 void readInput(){
     /**
      * Reads input from stdin and initialises the correspondent graph
     */
     int k;
-    if (scanf("%d %d", &n, &k) < 0){
-        cout << "Input invalido. Tente de novo!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    if (n < 2 || k < 0){
-        cout << "Input invalido. Tente de novo!" << endl;
-        exit(EXIT_FAILURE);
-    }
+    scanf("%d %d", &n, &k);
 
     residual = vector<vertex>(n+2);
-    fluxes = (int**)malloc(sizeof(int*)*(n+2));
-    for(int i = 0; i < n+2; ++i){
-        fluxes[i]=(int*)calloc(n+2, sizeof(int));
-    }
+    fluxes = vector<vector<int>>(n+2, vector<int>(n+2,0));
 
     int x, y;
     for (int i = 1; i <= n; ++i){
-        if (scanf("%d %d", &x, &y) < 0){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        scanf("%d %d", &x, &y);
 
         residual[0].edges.push_back(i);     //Aresta do processador X para processo i
-        residual[i].edges.push_back(0);
         residual[i].edges.push_back(n+1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(i);
         fluxes[0][i] = x;
-        fluxes[i][0] = x;
         fluxes[i][n+1] = y;
-        fluxes[n+1][i] = y;
     }
     
     int u, v, c;
     for (int i = 0; i < k; ++i){
-        if (scanf("%d %d %d", &u, &v, &c) < 0){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
-        if (u > n || v > n){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        scanf("%d %d %d", &u, &v, &c);
 
         residual[u].edges.push_back(v);  //Aresta do processo u para o processo v
         residual[v].edges.push_back(u);  //Aresta do processo v para o processo u
@@ -88,19 +61,6 @@ void readInput(){
         fluxes[v][u] = c;
     }
 }
-/*
-int findIndex(vector<edge> v, int x){
-    
-      Finds the index of x in the vector v
-     
-    for (unsigned int i = 0; i < v.size(); ++i){
-        if (v[i].id == x){
-            return i;
-        }
-    }
-    return -1;
-}
-*/
 
 bool BFS(int s, int t){
     /**
@@ -132,45 +92,31 @@ bool BFS(int s, int t){
     return false;
 }
 
-pair<stack<int>,int> findAugPath(int s, int t){
-    /**
-     * Finds shortest path from X to Y
-     */
-
-    stack<int> path = stack<int>();
-    if(!BFS(s, t))
-        return make_pair(path,0);
-
-    int child = residual.size()-1;         // Y
-    int parent = residual[child].parent; 
-    int minimum = INF;
-    while (parent >= 0){                   
-        minimum = min(minimum,fluxes[child][parent]);
-        path.push(child);                 
-        child = parent;
-        parent = residual[child].parent;
-    }
-    path.push(0);
-    return make_pair(path,minimum);
-}
-
 int EdmondsKarp(){
 
-    pair<stack<int>,int> aug = findAugPath(0, n+1);
-    stack<int> path;
-    int min, cur, next, total=0;
-    while((path = aug.first).size() > 1){
-        min = aug.second;
-        total += min;
+    stack<int> path = stack<int>();
+    int child, parent, minimum, cur, next, total = 0;
+    while(BFS(0,n+1)){
+        child = residual.size()-1;         // Y
+        parent = residual[child].parent; 
+        minimum = INF;
+        while (parent >= 0){                   
+            minimum = min(minimum,fluxes[parent][child]);
+            path.push(child);                 
+            child = parent;
+            parent = residual[child].parent;
+        }
+        path.push(0);
+        total += minimum;
         
         while(path.size() > 1){
             cur = path.top();
             path.pop();
             next = path.top();
-            fluxes[cur][next] -= min;
-            fluxes[next][cur] -= min;
+            fluxes[cur][next] -= minimum;
+            if (cur != 0 && next != n+1)
+                fluxes[next][cur] -= minimum;
         }
-        aug = findAugPath(0, n+1);
     }
     return total;
 }
@@ -184,39 +130,5 @@ int main(){
     //printGraph(graph);
     //printGraph(residual);
     cout << EdmondsKarp() << endl;
-    for(int i = 0; i < n+2; ++i){
-        free(fluxes[i]);
-    }
-    free(fluxes);
     exit(EXIT_SUCCESS);  
-}
-
-/*************************************************************************************************************************************/
-/*                                                             PRINTS                                                                */
-/*************************************************************************************************************************************/
-
-/*void printGraph(vector<vertex> g){
-    
-      Prints graph
-
-    cout << "Graph:" << endl;
-    for(unsigned int i = 0; i < g.size(); ++i){
-        cout << i << " _> ";
-        for(unsigned int j = 0; j < g[i].edges.size(); ++j){
-            cout << "(" << g[i].edges[j].id << ", " << g[i].edges[j].flux << ") ";
-        }
-        cout << endl;
-    }
-}*/
-
-void printStack(stack<int> st){
-    /**
-     * Prints stack
-     */
-    stack<int> s = st;
-    while(!s.empty()){
-        cout << s.top() << ",";
-        s.pop();
-    }
-    cout << endl;
 }
