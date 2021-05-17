@@ -139,8 +139,7 @@ int EdmondsKarp(){
         parent = parents[child];
         parentEdge = parentEdges[child];  
         minimum = INF;
-        while (parent >= 0){    
-            cout << child << " " << parent << endl;               
+        while (parent >= 0){                  
             minimum = min(minimum,residual[parent].edges[parentEdge].flux);
             path.push(child);                 
             child = parent;
