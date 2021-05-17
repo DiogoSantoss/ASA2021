@@ -9,6 +9,9 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <algorithm>
+#include <string.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -27,13 +30,15 @@ typedef struct{
 // Each vertex has an array of edges and necessary params for BFS
 typedef struct{
     vector<edge> edges;
-    int parent;
     int parentEdge;
-    int colour;
 } vertex;
 
 //Residual Graph
 vector<vertex> residual;
+int* parents;
+int* parentEdges;
+int* visited;
+int n;
 
 void printGraph(vector<vertex> g);
 void printStack(stack<int> s);
@@ -42,24 +47,17 @@ void readInput(){
     /**
      * Reads input from stdin and initialises the correspondent graph
     */
-    int n, k;
-    if (scanf("%d %d", &n, &k) < 0){
-        cout << "Input invalido. Tente de novo!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    if (n < 2 || k < 0){
-        cout << "Input invalido. Tente de novo!" << endl;
-        exit(EXIT_FAILURE);
-    }
+    int k;
+    scanf("%d %d", &n, &k);
 
     residual = vector<vertex>(n+2);
+    parents = (int*)malloc(sizeof(int)*(n+2));
+    parentEdges = (int*)malloc(sizeof(int)*(n+2));
+    visited = (int*)malloc(sizeof(int)*(n+2));
 
     int x, y;
     for (int i = 1; i <= n; ++i){
-        if (scanf("%d %d", &x, &y) < 0){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        scanf("%d %d", &x, &y);
 
         edge rX1, rX2, rY1, rY2;
 
@@ -72,19 +70,12 @@ void readInput(){
         residual[i].edges.push_back(rX1);   //Aresta do processo i para processador X
         residual[0].edges.push_back(rX2);   //Aresta do processador X para processo i
         residual[i].edges.push_back(rY1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(rY2); //Aresta do processador Y para processado i
+        residual[n+1].edges.push_back(rY2); //Aresta do processador Y para processo i
     }
     
     int u, v, c;
     for (int i = 0; i < k; ++i){
-        if (scanf("%d %d %d", &u, &v, &c) < 0){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
-        if (u > n || v > n){
-            cout << "Vertice invalido. Tente de novo!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        scanf("%d %d %d", &u, &v, &c);
 
         edge r1, r2;
 
@@ -108,16 +99,14 @@ int findIndex(vector<edge> v, int x){
     return -1;
 }
 
-void BFS(int s){
+bool BFS(int s, int t){
     /**
      * Breadth-First Search
      */
-    for(unsigned int i = 0; i < residual.size(); ++i){
-        residual[i].parent = -1;
-        residual[i].parentEdge = -1;
-        residual[i].colour = WHITE;
-    }
-    residual[s].colour = GREY;
+    memset(visited, 0,(n+2)*sizeof(int));
+    memset(parents, -1,(n+2)*sizeof(int));
+    memset(parentEdges, -1,(n+2)*sizeof(int));
+    visited[s] = true;
 
     queue<int> Q;
     Q.push(s);
@@ -127,61 +116,50 @@ void BFS(int s){
         Q.pop();
         for(unsigned int i = 0; i < residual[w].edges.size(); ++i){
             int id = residual[w].edges[i].id;
-            if(residual[w].edges[i].flux > 0 && residual[id].colour == WHITE){
+            if(residual[w].edges[i].flux > 0 && !(visited[id])){
+                parents[id] = w;
+                parentEdges[id] = i;
+                if (id == t){
+                    return true;                
+                }
+                visited[id] = true;
                 Q.push(id);
-                residual[id].colour = GREY;
-                residual[id].parent = w;
-                residual[id].parentEdge = i;
             }
         }
-        residual[w].colour = BLACK;
     }
-}
-
-pair<stack<int>,int> findAugPath(int s){
-    /**
-     * Finds shortest path from X to Y
-     */
-    BFS(s);
-
-    stack<int> path = stack<int>();
-    int child = residual.size()-1;
-    int parent = residual[child].parent;
-
-    int min = INF;
-    while (parent >= 0){
-        if (min > residual[parent].edges[]){
-            min = fluxes[child][parent];
-        }
-        path.push(child);
-        child = parent;
-        parent = residual[child].parent;
-    }
-    path.push(0);
-    return make_pair(path,min);
+    return false;
 }
 
 int EdmondsKarp(){
 
-    pair<stack<int>,int> aug = findAugPath(0);
-    stack<int> path;
-    int min, cur, next, cur_index, next_index,total=0;
-    while((path = aug.first).size() > 1){
-        min = aug.second;
-        total += min;
+    stack<int> path = stack<int>();
+    int child, parent, parentEdge, minimum, cur, curEdge, next, nextEdge, total = 0;
+    while(BFS(0,n+1)){
+        child = residual.size()-1;         // Y
+        parent = parents[child];
+        parentEdge = parentEdges[child];  
+        minimum = INF;
+        while (parent >= 0){    
+            cout << child << " " << parent << endl;               
+            minimum = min(minimum,residual[parent].edges[parentEdge].flux);
+            path.push(child);                 
+            child = parent;
+            parent = parents[child];
+            parentEdge = parentEdges[child];
+        }
+
+        path.push(0);
+        total += minimum;
         
         while(path.size() > 1){
             cur = path.top();
             path.pop();
             next = path.top();
-            next_index = residual[next].parentEdge;
-            cur_index = findIndex(residual[next].edges, cur);
-            if (cur_index >= 0 && next_index >= 0){
-                residual[cur].edges[next_index].flux -= min;
-                residual[next].edges[cur_index].flux -= min;
-            }
+            nextEdge = parentEdges[next];
+            residual[cur].edges[nextEdge].flux -= minimum;
+            if ((curEdge = findIndex(residual[next].edges, cur)) >= 0)
+                residual[next].edges[curEdge].flux += minimum;
         }
-        aug = findAugPath(0);
     }
     return total;
 }
@@ -192,9 +170,11 @@ int EdmondsKarp(){
 
 int main(){
     readInput();
-    //printGraph(graph);
     //printGraph(residual);
     cout << EdmondsKarp() << endl;
+    free(parents);
+    free(parentEdges);
+    free(visited);
     exit(EXIT_SUCCESS);  
 }
 
