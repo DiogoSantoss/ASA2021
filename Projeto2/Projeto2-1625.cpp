@@ -28,9 +28,10 @@ typedef struct{
 
 //Residual Graph
 vector<vertex> residual;
-int** fluxes; 
-int n;
+int ** fluxes; 
+int n, s, t;
 
+void printGraph(vector<vertex> g);
 void printStack(stack<int> s);
 
 void readInput(){
@@ -46,11 +47,11 @@ void readInput(){
         cout << "Input invalido. Tente de novo!" << endl;
         exit(EXIT_FAILURE);
     }
-
+    s = 0; t = n+1;
     residual = vector<vertex>(n+2);
-    fluxes = (int**)malloc(sizeof(int*)*(n+2));
-    for(int i = 0; i < n+2; ++i){
-        fluxes[i]=(int*)calloc(n+2, sizeof(int));
+    fluxes = new int*[n+2];
+    for (int i = 0; i < n+2; ++i){
+        fluxes[i]=new int[n+2];
     }
 
     int x, y;
@@ -60,14 +61,12 @@ void readInput(){
             exit(EXIT_FAILURE);
         }
 
-        residual[0].edges.push_back(i);     //Aresta do processador X para processo i
-        residual[i].edges.push_back(0);
-        residual[i].edges.push_back(n+1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(i);
-        fluxes[0][i] = x;
-        fluxes[i][0] = x;
-        fluxes[i][n+1] = y;
-        fluxes[n+1][i] = y;
+        residual[s].edges.push_back(i);     //Aresta do processador X para processo i
+        residual[i].edges.push_back(s);
+        residual[i].edges.push_back(t);   //Aresta do processo i para processador Y
+        residual[t].edges.push_back(i);
+        fluxes[s][i] = x;
+        fluxes[i][t] = y;
     }
     
     int u, v, c;
@@ -87,25 +86,12 @@ void readInput(){
         fluxes[v][u] = c;
     }
 }
-/*
-int findIndex(vector<edge> v, int x){
-    
-      Finds the index of x in the vector v
-     
-    for (unsigned int i = 0; i < v.size(); ++i){
-        if (v[i].id == x){
-            return i;
-        }
-    }
-    return -1;
-}
-*/
 
 bool BFS(int s, int t){
     /**
      * Breadth-First Search
      */
-    for(unsigned int i = 0; i < residual.size(); ++i){
+    for(size_t i = 0; i < residual.size(); ++i){
         residual[i].parent = -1;
         residual[i].visited = false;
     }
@@ -115,9 +101,8 @@ bool BFS(int s, int t){
     Q.push(s);
     
     while(!Q.empty()){
-        int w = Q.front();    
-        Q.pop();
-        for(unsigned int i = 0; i < residual[w].edges.size(); ++i){
+        int w = Q.front(); Q.pop();
+        for(size_t i = 0; i < residual[w].edges.size(); ++i){
             int id = residual[w].edges[i];                            //index of edge i of w in residual graph
             if(fluxes[w][id] > 0 && !(residual[id].visited)){
                 residual[id].parent = w;
@@ -133,28 +118,19 @@ bool BFS(int s, int t){
 
 int EdmondsKarp(){
 
-    stack<int> path = stack<int>();
-    int child, parent, minimum, cur, next, total = 0;
-    while(BFS(0,n+1)){
-        child = residual.size()-1;         // Y
-        parent = residual[child].parent; 
+    int u, minimum, total = 0;
+    while(BFS(s, t)) {
         minimum = INF;
-        while (parent >= 0){                   
-            minimum = min(minimum,fluxes[parent][child]);
-            path.push(child);                 
-            child = parent;
-            parent = residual[child].parent;
+        for (int v = t; v != s; v = residual[v].parent){
+            u = residual[v].parent;
+            minimum = min(minimum,fluxes[u][v]);
         }
-        path.push(0);
+        for (int v = t; v != s; v = residual[v].parent){
+            u = residual[v].parent;
+            fluxes[u][v] -= minimum;
+            fluxes[v][u] += minimum;
+        }
         total += minimum;
-        
-        while(path.size() > 1){
-            cur = path.top();
-            path.pop();
-            next = path.top();
-            fluxes[cur][next] -= minimum;
-            fluxes[next][cur] -= minimum;
-        }
     }
     return total;
 }
@@ -169,9 +145,9 @@ int main(){
     //printGraph(residual);
     cout << EdmondsKarp() << endl;
     for(int i = 0; i < n+2; ++i){
-        free(fluxes[i]);
+        delete[] fluxes[i];
     }
-    free(fluxes);
+    delete[] fluxes;
     exit(EXIT_SUCCESS);  
 }
 
@@ -179,6 +155,19 @@ int main(){
 /*                                                             PRINTS                                                                */
 /*************************************************************************************************************************************/
 
+/*void printGraph(vector<vertex> g){
+    
+      Prints graph
+
+    cout << "Graph:" << endl;
+    for(unsigned int i = 0; i < g.size(); ++i){
+        cout << i << " _> ";
+        for(unsigned int j = 0; j < g[i].edges.size(); ++j){
+            cout << "(" << g[i].edges[j].id << ", " << g[i].edges[j].flux << ") ";
+        }
+        cout << endl;
+    }
+}*/
 
 void printStack(stack<int> st){
     /**

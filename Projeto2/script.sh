@@ -4,7 +4,7 @@ OUTPUTDIR="output"
 
 mkdir -p ${FOLDERNAME}
 
-g++ -std=c++11 -O3 -Wall -o proj Projeto2C.cpp -lm
+g++ -std=c++11 -O3 -Wall -o proj Projeto2-1625.cpp -lm
 
 mkdir -p ${FOLDEROUTPUTNAME}
 
