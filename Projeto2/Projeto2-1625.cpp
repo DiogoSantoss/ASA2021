@@ -140,7 +140,7 @@ int EdmondsKarp(){
         parent = residual[child].parent; 
         minimum = INF;
         while (parent >= 0){                   
-            minimum = min(minimum,fluxes[child][parent]);
+            minimum = min(minimum,fluxes[parent][child]);
             path.push(child);                 
             child = parent;
             parent = residual[child].parent;
