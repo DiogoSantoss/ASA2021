@@ -64,18 +64,18 @@ void readInput(){
             exit(EXIT_FAILURE);
         }
 
-        edge rX1, rX2, rY1, rY2;
+        edge rX2, rY1;
 
-        rX1.flux = x;   rX2.flux = x;
-        rX1.id = 0;     rX2.id = i;
+        rX2.flux = x;
+        rX2.id = i;
         
-        rY1.flux = y;   rY2.flux = y;
-        rY1.id = n+1;   rY2.id = i;
+        rY1.flux = y;  
+        rY1.id = n+1;   
 
-        residual[i].edges.push_back(rX1);   //Aresta do processo i para processador X
+        //residual[i].edges.push_back(rX1);   //Aresta do processo i para processador X
         residual[0].edges.push_back(rX2);   //Aresta do processador X para processo i
         residual[i].edges.push_back(rY1);   //Aresta do processo i para processador Y
-        residual[n+1].edges.push_back(rY2); //Aresta do processador Y para processo i
+        //residual[n+1].edges.push_back(rY2); //Aresta do processador Y para processo i
     }
     
     int u, v, c;
@@ -155,8 +155,6 @@ int EdmondsKarp(){
 
 int main(){
     readInput();
-    //printGraph(graph);
-    //printGraph(residual);
     cout << EdmondsKarp() << endl;
     exit(EXIT_SUCCESS);  
 }
@@ -165,10 +163,10 @@ int main(){
 /*                                                             PRINTS                                                                */
 /*************************************************************************************************************************************/
 
-/*void printGraph(vector<vertex> g){
-    
+void printGraph(vector<vertex> g){
+    /*
       Prints graph
-
+    */
     cout << "Graph:" << endl;
     for(unsigned int i = 0; i < g.size(); ++i){
         cout << i << " _> ";
@@ -177,7 +175,7 @@ int main(){
         }
         cout << endl;
     }
-}*/
+}
 
 void printStack(stack<int> st){
     /**
