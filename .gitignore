@@ -28,9 +28,16 @@
 
 # Executables
 *.exe
-*.out
 *.app
 
 # Others
 .vscode
-.rar
+*.rar
+p0.cpp
+p1.md
+*.csv
+*.xlsx
+*.docx
+salvador_espadeiro.sh
+randomDAG.cpp
+gen2procs.cpp
