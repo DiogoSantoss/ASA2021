@@ -40,4 +40,4 @@ p1.md
 *.docx
 salvador_espadeiro.sh
 randomDAG.cpp
-gen2procs.cpp
+gen2proc.cpp
